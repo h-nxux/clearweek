@@ -1,0 +1,17 @@
+[package]
+name = "clearweek"
+version = "1.0.0"
+description = "Clearweek — weekly time-block planner"
+authors = ["me"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1", features = [] }
+
+[dependencies]
+tauri = { version = "1", features = [ "macos-private-api", "window-all"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClearWeek</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: transparent;
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    #root {
+      width: 100%; height: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Nunito', sans-serif;
+      background:
+        radial-gradient(ellipse at 12% 8%, rgba(255,255,255,0.75) 0%, transparent 45%),
+        radial-gradient(ellipse at 85% 85%, rgba(160,238,255,0.55) 0%, transparent 48%),
+        radial-gradient(ellipse at 55% 40%, rgba(200,252,235,0.3) 0%, transparent 40%),
+        linear-gradient(135deg, #ddf4ff 0%, #beeeff 22%, #b2f0e6 52%, #cdf6ff 78%, #e6faff 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .orb { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; }
+    .orb1 { width:320px;height:320px;top:-100px;left:-80px;background:radial-gradient(circle at 38% 38%,rgba(255,255,255,0.65),rgba(150,232,255,0.12) 58%,transparent 78%); }
+    .orb2 { width:260px;height:260px;bottom:-60px;right:-50px;background:radial-gradient(circle,rgba(130,248,215,0.32),transparent 68%); }
+    .orb3 { width:180px;height:180px;top:38%;left:58%;background:radial-gradient(circle,rgba(195,245,255,0.38),transparent 68%); }
+
+    /* ── custom titlebar ── */
+    #titlebar {
+      height: 38px;
+      background: linear-gradient(180deg, rgba(140,212,255,0.93) 0%, rgba(92,182,248,0.89) 42%, rgba(64,160,238,0.92) 100%);
+      border-bottom: 1px solid rgba(44,132,210,0.3);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.52) inset;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 14px;
+      -webkit-app-region: drag;
+      flex-shrink: 0;
+      z-index: 10;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .tb-left { display:flex; align-items:center; gap:8px; -webkit-app-region: no-drag; }
+    .tb-icon { width:18px;height:18px;background:linear-gradient(135deg,#a8f0d0,#3dd4a0,#1ab880);border-radius:5px;border:1px solid rgba(10,150,90,0.22);box-shadow:0 1px 3px rgba(0,100,60,0.18),inset 0 1px 0 rgba(255,255,255,0.5); }
+    .tb-title { font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,75,155,0.4),0 0 10px rgba(90,195,255,0.28);letter-spacing:0.3px; }
+
+    .wb-row { display:flex; gap:6px; -webkit-app-region: no-drag; }
+    .wb { width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,0.1);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6),0 1px 2px rgba(0,0,0,0.1);transition:filter 0.1s; }
+    .wb:hover { filter: brightness(1.15); }
+    .wb-r { background:linear-gradient(135deg,#ff8a8a,#e03030); }
+    .wb-y { background:linear-gradient(135deg,#ffdc6e,#e6a800); }
+    .wb-g { background:linear-gradient(135deg,#7af0a0,#22c060); }
+
+    /* ── main content ── */
+    #main-wrap {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    #app {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+      padding: 3px 10px 0;
+    }
+
+    #app::-webkit-scrollbar { width: 6px; }
+    #app::-webkit-scrollbar-track { background: transparent; }
+    #app::-webkit-scrollbar-thumb { background: rgba(80,160,220,0.25); border-radius: 3px; }
+    #app::-webkit-scrollbar-thumb:hover { background: rgba(80,160,220,0.4); }
+
+    .tbar2 {
+      background: linear-gradient(180deg, rgba(220,247,255,0.72) 0%, rgba(200,240,255,0.62) 100%);
+      padding: 4px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 10px;
+      margin-bottom: 3px;
+      flex-wrap: wrap; gap: 6px;
+      box-shadow: 0 1px 4px rgba(80,160,220,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .wnav { display:flex; align-items:center; gap:5px; }
+    .nbtn { width:26px;height:26px;border-radius:6px;background:linear-gradient(180deg,rgba(255,255,255,0.92) 0%,rgba(208,240,255,0.85) 100%);border:1px solid rgba(95,175,228,0.38);box-shadow:0 1px 4px rgba(55,145,218,0.1),inset 0 1px 0 rgba(255,255,255,0.9);cursor:pointer;color:#1a78b0;font-size:14px;display:flex;align-items:center;justify-content:center;transition:box-shadow 0.12s; }
+    .nbtn:hover { box-shadow:0 2px 8px rgba(55,145,218,0.18),inset 0 1px 0 rgba(255,255,255,1); }
+    .wlbl { font-size:12px;font-weight:800;color:#0a5888;text-shadow:0 1px 0 rgba(255,255,255,0.9);min-width:100px;text-align:center; }
+
+    .cats { display:flex; gap:4px; flex-wrap:wrap; }
+    .cpill { padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid rgba(255,255,255,0.5);box-shadow:0 1px 4px rgba(0,0,0,0.07),inset 0 1px 0 rgba(255,255,255,0.75);transition:all 0.15s;opacity:0.62;font-family:inherit; }
+    .cpill.on { opacity:1;box-shadow:0 2px 8px rgba(0,0,0,0.11),inset 0 1px 0 rgba(255,255,255,0.85); }
+    .cpill:hover { opacity:1; }
+
+    .savebar { padding:1px 12px;font-size:10px;font-weight:600;color:#2a8ab0;display:flex;align-items:center;gap:5px;margin-bottom:1px; }
+    .sdot { width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#a0ffcc,#22d080);box-shadow:0 0 5px rgba(0,200,100,0.42); }
+    .sdot.dy { background:radial-gradient(circle at 35% 30%,#ffe896,#f0b800);box-shadow:0 0 5px rgba(215,168,0,0.42); }
+
+    .gwrap { overflow-x: auto; overflow-y: hidden; margin-bottom: 0; }
+    .gwrap::-webkit-scrollbar { height: 4px; }
+    .gwrap::-webkit-scrollbar-thumb { background: rgba(80,160,220,0.2); border-radius:2px; }
+
+    .grid { display:grid;min-width:520px;grid-template-columns:40px repeat(7,1fr); }
+
+    .dhdr { text-align:center;padding:3px 2px;display:flex;flex-direction:column;align-items:center;gap:1px; }
+    .dname { font-size:9px;font-weight:800;color:#4a9abf;text-transform:uppercase;letter-spacing:0.3px;text-shadow:0 1px 0 rgba(255,255,255,0.9); }
+    .dnum { font-size:17px;font-weight:800;color:#0a4a70;text-shadow:0 1px 0 rgba(255,255,255,0.8);line-height:1; }
+    .dhdr.tod .dnum { background:linear-gradient(135deg,#5cc8ff,#1a9eee,#0078cc);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,120,200,0.32),inset 0 1px 0 rgba(255,255,255,0.42);text-shadow:0 1px 2px rgba(0,60,120,0.38); }
+
+    .tlbl { font-size:9px;font-weight:700;color:#6ab8d8;text-align:right;padding-right:6px;height:16px;display:flex;align-items:center;justify-content:flex-end;text-shadow:0 1px 0 rgba(255,255,255,0.8); }
+    .tlbl-half { color:rgba(106,184,216,0.5);font-size:8px; }
+
+    .slot { height:16px;border-top:1px solid rgba(130,205,240,0.18);position:relative;cursor:pointer;transition:background 0.1s;overflow:visible; }
+    .slot-half { border-top-color:rgba(130,205,240,0.07); }
+    .slot:hover { background:rgba(175,232,255,0.25); }
+    .slot.dh { background:rgba(110,215,255,0.18) !important; }
+
+    .blk {
+      position:absolute;left:2px;right:2px;top:1px;
+      border-radius:5px;padding:1px 5px;
+      font-size:9px;font-weight:700;z-index:2;cursor:pointer;overflow:hidden;
+      display:flex;flex-direction:column;justify-content:center;
+      user-select:none;transition:filter 0.12s,box-shadow 0.12s;
+    }
+    .blk::before { content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,0.52) 0%,rgba(255,255,255,0.08) 100%);border-radius:5px 5px 0 0;pointer-events:none; }
+    .blk::after { content:'';position:absolute;inset:0;border-radius:5px;border-top:1px solid rgba(255,255,255,0.75);border-left:1px solid rgba(255,255,255,0.45);border-right:1px solid rgba(255,255,255,0.18);border-bottom:1px solid rgba(255,255,255,0.12);pointer-events:none; }
+    .blk:hover { filter:brightness(1.06) saturate(1.08);box-shadow:0 3px 10px rgba(0,0,0,0.14),inset 0 1px 0 rgba(255,255,255,0.75); }
+
+    .blk-handle {
+      position:absolute;bottom:0;left:0;right:0;height:6px;
+      cursor:ns-resize;z-index:4;border-radius:0 0 5px 5px;
+    }
+    .blk-handle:hover { background:rgba(255,255,255,0.35); }
+
+    .bt { font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:relative;z-index:1; }
+    .bs { font-size:8px;opacity:0.78;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:relative;z-index:1; }
+
+    .abtn { background:linear-gradient(180deg,rgba(115,222,168,0.95) 0%,rgba(45,192,108,0.9) 45%,rgba(18,168,82,0.92) 100%);color:#fff;border:1px solid rgba(8,118,48,0.28);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(0,118,48,0.16),inset 0 1px 0 rgba(255,255,255,0.42);text-shadow:0 1px 1px rgba(0,78,28,0.32);transition:all 0.1s; }
+    .abtn:hover { background:linear-gradient(180deg,rgba(145,238,188,0.95) 0%,rgba(65,208,128,0.9) 45%,rgba(32,182,98,0.92) 100%); }
+
+    .tasklist { display:flex;flex-direction:column;gap:5px; }
+
+    .todo-toggle { width:22px;height:22px;border-radius:5px;background:linear-gradient(180deg,rgba(255,255,255,0.88) 0%,rgba(208,240,255,0.8) 100%);border:1px solid rgba(95,175,228,0.38);box-shadow:0 1px 3px rgba(55,145,218,0.1),inset 0 1px 0 rgba(255,255,255,0.9);cursor:pointer;color:#1a78b0;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all 0.12s;flex-shrink:0; }
+    .todo-toggle:hover { box-shadow:0 2px 6px rgba(55,145,218,0.2),inset 0 1px 0 rgba(255,255,255,1); }
+    .todo-toggle.on { background:linear-gradient(180deg,rgba(88,192,35,0.25) 0%,rgba(60,170,20,0.2) 100%);border-color:rgba(60,170,20,0.45);color:#1a5800; }
+
+    .todo-panel {
+      width: 0;
+      overflow: hidden;
+      transition: width 0.25s cubic-bezier(0.2, 0, 0, 1);
+      background: linear-gradient(160deg, rgba(240,253,255,0.97) 0%, rgba(218,246,255,0.95) 100%);
+      border-right: 1px solid rgba(130,205,240,0.4);
+      border-radius: 0 0 0 12px;
+      display: flex; flex-direction: column;
+      flex-shrink: 0;
+    }
+    .todo-panel.open { width: 200px; }
+
+    .todo-panel-inner {
+      width: 200px;
+      padding: 12px 10px;
+      display: flex; flex-direction: column; gap: 10px;
+      overflow-y: auto; height: 100%;
+    }
+
+    .todo-panel-hdr { display:flex;align-items:center;justify-content:space-between; }
+    .todo-panel-title { font-size:10px;font-weight:800;color:#1a6888;text-transform:uppercase;letter-spacing:0.4px; }
+
+    .sbhdr { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px; }
+    .sbtitle { font-size:10px;font-weight:800;color:#1a6888;text-transform:uppercase;letter-spacing:0.4px;text-shadow:0 1px 0 rgba(255,255,255,0.9); }
+
+    .chip { padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:grab;user-select:none;white-space:nowrap;font-family:inherit;position:relative;overflow:hidden;transition:box-shadow 0.1s,filter 0.1s; }
+    .chip::before { content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,0.48) 0%,rgba(255,255,255,0.06) 100%);border-radius:20px 20px 0 0;pointer-events:none; }
+    .chip::after { content:'';position:absolute;inset:0;border-radius:20px;border-top:1px solid rgba(255,255,255,0.72);border-left:1px solid rgba(255,255,255,0.38);border-right:1px solid rgba(255,255,255,0.15);border-bottom:1px solid rgba(255,255,255,0.1);pointer-events:none; }
+    .chip:hover { filter:brightness(1.07) saturate(1.1);box-shadow:0 3px 10px rgba(0,0,0,0.12); }
+
+    /* modal */
+    .mwrap { position:fixed;inset:0;background:rgba(8,55,115,0.25);display:flex;align-items:center;justify-content:center;z-index:200; }
+    .modal { background:linear-gradient(155deg,rgba(245,253,255,0.98) 0%,rgba(222,247,255,0.96) 100%);border:1.5px solid rgba(255,255,255,0.95);border-radius:14px;box-shadow:0 18px 50px rgba(18,95,175,0.2),inset 0 1px 0 rgba(255,255,255,1);padding:18px;width:260px; }
+    .mtitle { font-size:14px;font-weight:800;color:#084468;margin-bottom:12px;display:flex;align-items:center;gap:5px; }
+    .modal input,.modal select { width:100%;margin-bottom:8px;font-size:12px;font-weight:600;padding:7px 10px;border:1.5px solid rgba(95,185,232,0.38);border-radius:7px;background:linear-gradient(180deg,rgba(255,255,255,0.97) 0%,rgba(232,249,255,0.92) 100%);color:#084468;outline:none;font-family:inherit; }
+    .modal input:focus,.modal select:focus { border-color:rgba(55,165,238,0.62);box-shadow:0 0 0 3px rgba(95,185,255,0.14); }
+    .macts { display:flex;gap:6px;margin-top:10px; }
+    .bok { flex:1;background:linear-gradient(180deg,rgba(85,192,255,0.95) 0%,rgba(35,155,240,0.9) 45%,rgba(8,125,218,0.92) 100%);color:#fff;border:1px solid rgba(4,88,178,0.32);border-radius:7px;padding:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(0,95,195,0.18),inset 0 1px 0 rgba(255,255,255,0.38);text-shadow:0 1px 1px rgba(0,58,135,0.32); }
+    .bok:hover { background:linear-gradient(180deg,rgba(115,210,255,0.95) 0%,rgba(55,175,248,0.9) 45%,rgba(18,145,232,0.92) 100%); }
+    .bcancel { flex:1;background:linear-gradient(180deg,rgba(255,255,255,0.92) 0%,rgba(222,246,255,0.86) 100%);color:#1a6888;border:1px solid rgba(95,185,232,0.32);border-radius:7px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit; }
+    .delhint { font-size:10px;color:#5aaccc;text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(130,205,240,0.28);cursor:pointer;font-weight:700;transition:color 0.15s; }
+    .delhint:hover { color:#cc1a1a; }
+    .chklabel { font-size:11px;font-weight:700;color:#1a6888;display:flex;align-items:center;gap:5px;margin-top:2px; }
+  </style>
+</head>
+<body>
+<div id="root">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <div id="titlebar" data-tauri-drag-region>
+    <div class="wb-row">
+      <div class="wb wb-r" id="btn-close" title="닫기"></div>
+      <div class="wb wb-y" id="btn-min" title="최소화"></div>
+      <div class="wb wb-g" id="btn-max" title="최대화"></div>
+    </div>
+    <div class="tb-left">
+      <div class="tb-icon"></div>
+      <span class="tb-title">ClearWeek</span>
+    </div>
+  </div>
+
+  <div id="main-wrap">
+    <div class="todo-panel" id="todo-panel">
+      <div class="todo-panel-inner">
+        <div class="todo-panel-hdr">
+          <span class="todo-panel-title">&#10003; 할 일</span>
+          <button class="abtn" onclick="openAddTask()">+ 추가</button>
+        </div>
+        <div class="tasklist" id="tlist"></div>
+      </div>
+    </div>
+
+    <div id="app">
+      <div class="tbar2">
+        <div class="wnav">
+          <button class="nbtn" onclick="cw(-1)">&#8249;</button>
+          <span class="wlbl" id="wlbl"></span>
+          <button class="nbtn" onclick="cw(1)">&#8250;</button>
+        </div>
+        <div class="cats" id="cats"></div>
+      </div>
+
+      <div class="savebar">
+        <div class="sdot" id="sdot"></div>
+        <span id="stxt">저장됨</span>
+      </div>
+
+      <div class="gwrap">
+        <div class="grid" id="grid"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="mod"></div>
+</div>
+
+  <script>
+    const { appWindow } = window.__TAURI__?.window || {};
+    document.getElementById('btn-close').onclick = () => appWindow?.close();
+    document.getElementById('btn-min').onclick = () => appWindow?.minimize();
+    document.getElementById('btn-max').onclick = async () => {
+      const maximized = await appWindow?.isMaximized();
+      maximized ? appWindow?.unmaximize() : appWindow?.maximize();
+    };
+
+    const PANEL_W = 200;
+    let todoOpen = false;
+    let baseW = null, baseH = null, baseX = null, baseY = null;
+
+    async function toggleTodo() {
+      todoOpen = !todoOpen;
+      document.querySelectorAll('.todo-toggle').forEach(b => b.classList.toggle('on', todoOpen));
+      if (appWindow) {
+        const { LogicalSize, LogicalPosition } = window.__TAURI__.window;
+        if (todoOpen) {
+          const [size, pos] = await Promise.all([appWindow.outerSize(), appWindow.outerPosition()]);
+          const sf = await appWindow.scaleFactor();
+          baseW = Math.round(size.width / sf);
+          baseH = Math.round(size.height / sf);
+          baseX = Math.round(pos.x / sf);
+          baseY = Math.round(pos.y / sf);
+          // 창 리사이즈와 CSS 트랜지션을 동시에 시작
+          Promise.all([
+            appWindow.setPosition(new LogicalPosition(baseX - PANEL_W, baseY)),
+            appWindow.setSize(new LogicalSize(baseW + PANEL_W, baseH))
+          ]);
+          document.getElementById('todo-panel').classList.add('open');
+        } else {
+          document.getElementById('todo-panel').classList.remove('open');
+          setTimeout(() => Promise.all([
+            appWindow.setSize(new LogicalSize(baseW, baseH)),
+            appWindow.setPosition(new LogicalPosition(baseX, baseY))
+          ]), 250);
+        }
+      } else {
+        document.getElementById('todo-panel').classList.toggle('open', todoOpen);
+      }
+    }
+
+    const DAYS = ['월','화','수','목','금','토','일'];
+    const HRS = Array.from({length:16},(_,i)=>i+8);
+
+    const C = {
+      fixed:{ label:'고정', bg:'rgba(30,195,145,0.32)',  chip:'rgba(30,195,145,0.72)',  text:'#004535', bd:'rgba(20,200,150,0.55)' },
+      study:{ label:'공부', bg:'rgba(105,100,230,0.28)', chip:'rgba(105,100,230,0.68)', text:'#1a1858', bd:'rgba(110,105,235,0.5)' },
+      work: { label:'업무', bg:'rgba(35,148,242,0.28)',  chip:'rgba(35,148,242,0.68)',  text:'#002855', bd:'rgba(38,152,245,0.5)' },
+      break:{ label:'휴식', bg:'rgba(240,128,52,0.28)',  chip:'rgba(240,128,52,0.68)',  text:'#4a1800', bd:'rgba(240,132,55,0.5)' },
+      task: { label:'할일', bg:'rgba(88,192,35,0.28)',   chip:'rgba(88,192,35,0.68)',   text:'#1a3800', bd:'rgba(90,195,38,0.5)' },
+    };
+
+    const SK = 'tb_glass_v1';
+    let wo=0, blocks={}, tq=[], drag=null, dtype=null, af='all', st=null;
+
+    function getDow(dateStr) {
+      const day = new Date(dateStr + 'T00:00:00').getDay();
+      return day === 0 ? 6 : day - 1; // 0=월 ~ 6=일
+    }
+
+    function load() {
+      try {
+        const r = localStorage.getItem(SK);
+        if (r) { const d=JSON.parse(r); blocks=d.blocks||{}; tq=d.tq||[]; }
+        else { blocks={}; tq=[]; }
+      } catch(e) { blocks={}; tq=[]; }
+    }
+
+    function save() {
+      try { localStorage.setItem(SK, JSON.stringify({blocks,tq})); ss('ok'); }
+      catch(e) { ss('err'); }
+    }
+
+    function dirty() { ss('dy'); clearTimeout(st); st=setTimeout(save,800); }
+
+    function ss(s) {
+      const d=document.getElementById('sdot'), t=document.getElementById('stxt');
+      if(!d||!t) return;
+      if(s==='ok') { d.className='sdot'; t.textContent='저장됨'; }
+      else if(s==='dy') { d.className='sdot dy'; t.textContent='저장 중...'; }
+      else { d.className='sdot dy'; t.textContent='저장 실패'; }
+    }
+
+    function gwd(o) {
+      const n=new Date(), day=n.getDay(), diff=day===0?-6:1-day, mon=new Date(n);
+      mon.setDate(n.getDate()+diff+o*7);
+      return Array.from({length:7},(_,i)=>{ const d=new Date(mon); d.setDate(mon.getDate()+i); return d; });
+    }
+
+    const SLOT_H = 16;
+    const SLOTS = Array.from({length:32},(_,i)=>+(i*0.5+8).toFixed(1));
+
+    const dk = d => d.toISOString().slice(0,10);
+    const tk = () => new Date().toISOString().slice(0,10);
+    const bk = (d,h) => `${d}_${h}`;
+    const fk = (d,h) => `fw_${getDow(d)}_${h}`;
+    const gBStart = (d,h) => blocks[bk(d,h)] || blocks[fk(d,h)] || null;
+    const gB = (d,h) => {
+      const direct = gBStart(d,h);
+      if (direct) return direct;
+      let check = +(h-0.5).toFixed(1);
+      while (check >= 8.0) {
+        const b = gBStart(d,check);
+        if (b) { if (check+(b.span||1)*0.5 > h+0.01) return b; break; }
+        check = +(check-0.5).toFixed(1);
+      }
+      return null;
+    };
+    const sB = (d,h,v) => {
+      if (v.fixed) { blocks[fk(d,h)]=v; delete blocks[bk(d,h)]; }
+      else          { blocks[bk(d,h)]=v; delete blocks[fk(d,h)]; }
+      dirty();
+    };
+    const dB = (d,h) => { delete blocks[bk(d,h)]; delete blocks[fk(d,h)]; dirty(); };
+
+    function slotLabel(h) {
+      if (h%1!==0) return '';
+      return h<12?`${h}a`:h===12?'12p':`${h-12}p`;
+    }
+
+    function findSlotAt(x,y) {
+      const els = document.elementsFromPoint(x,y);
+      return els.find(el=>el.dataset?.date) || null;
+    }
+
+    function cw(d) { wo+=d; render(); }
+
+    function render() {
+      const ds=gwd(wo), td=tk(), m1=ds[0], m2=ds[6];
+      const f = d => `${d.getMonth()+1}/${d.getDate()}`;
+      document.getElementById('wlbl').textContent = `${f(m1)} – ${f(m2)}`;
+      rCats(); rGrid(ds,td); rTasks();
+    }
+
+    function rCats() {
+      const el = document.getElementById('cats'); el.innerHTML='';
+      const ap = document.createElement('button');
+      ap.className = 'cpill'+(af==='all'?' on':'');
+      ap.style.cssText = 'background:linear-gradient(135deg,rgba(195,240,255,0.88),rgba(155,225,250,0.82));color:#065a80;border-color:rgba(110,195,238,0.48);';
+      ap.textContent = '전체'; ap.onclick = ()=>{ af='all'; render(); }; el.appendChild(ap);
+      Object.entries(C).forEach(([k,c]) => {
+        const b = document.createElement('button');
+        b.className = 'cpill'+(af===k?' on':'');
+        b.style.cssText = `background:${c.chip};color:${c.text};border-color:${c.bd};`;
+        b.textContent = c.label; b.onclick = ()=>{ af=af===k?'all':k; render(); }; el.appendChild(b);
+      });
+    }
+
+    function rGrid(ds, td) {
+      const g = document.getElementById('grid'); g.innerHTML='';
+      g.style.gridTemplateColumns = '40px repeat(7,1fr)';
+      const tc = document.createElement('div');
+      tc.style.cssText = 'display:flex;align-items:center;justify-content:center;';
+      const tb = document.createElement('button');
+      tb.className = 'todo-toggle' + (todoOpen ? ' on' : '');
+      tb.title = '할 일'; tb.innerHTML = '&#10003;';
+      tb.onclick = toggleTodo;
+      tc.appendChild(tb);
+      g.appendChild(tc);
+      ds.forEach((d,i) => {
+        const h = document.createElement('div');
+        h.className = 'dhdr'+(dk(d)===td?' tod':'');
+        h.innerHTML = `<span class="dname">${DAYS[i]}</span><span class="dnum">${d.getDate()}</span>`;
+        g.appendChild(h);
+      });
+      SLOTS.forEach(h => {
+        const isHour = h%1===0;
+        const tl = document.createElement('div');
+        tl.className = 'tlbl'+(isHour?'':' tlbl-half');
+        tl.textContent = slotLabel(h);
+        g.appendChild(tl);
+        ds.forEach(d => {
+          const key=dk(d), sl=document.createElement('div');
+          sl.className = 'slot'+(isHour?'':' slot-half');
+          sl.dataset.date=key; sl.dataset.hour=h;
+          const b = gBStart(key,h);
+          if(b && (af==='all'||af===b.cat)) {
+            const cat = C[b.cat]||C.task;
+            const span = b.span||1;
+            const bl = document.createElement('div'); bl.className='blk';
+            bl.style.cssText = `background:${cat.bg};color:${cat.text};height:${span*SLOT_H-3}px;box-shadow:0 2px 8px ${cat.bd.replace('0.5','0.18')},inset 0 1px 0 rgba(255,255,255,0.62);`;
+            bl.innerHTML = `<div class="bt">${b.title}</div>${span>2&&b.sub?`<div class="bs">${b.sub}</div>`:''}`;
+            bl.addEventListener('pointerdown', e=>startBlockDrag(e, key, h, b));
+            bl.addEventListener('click', e=>{ e.stopPropagation(); oEB(key,h); });
+            const handle = document.createElement('div');
+            handle.className='blk-handle';
+            handle.addEventListener('pointerdown', e=>startBlockResize(e, key, h, b, bl));
+            bl.appendChild(handle);
+            sl.appendChild(bl);
+          }
+          if(!gB(key,h)) sl.addEventListener('click', ()=>oAB(key,h));
+          g.appendChild(sl);
+        });
+      });
+    }
+
+    let pDrag = null;
+
+    function startChipDrag(e, t) {
+      e.preventDefault();
+      startPDrag(e, { type:'chip', t });
+    }
+
+    function startBlockDrag(e, date, hour, b) {
+      e.preventDefault(); e.stopPropagation();
+      startPDrag(e, { type:'block', date, hour, b });
+    }
+
+    function startPDrag(e, data) {
+      const item = data.type === 'chip' ? data.t : data.b;
+      const cat = C[item.cat]||C.task;
+      const ghost = document.createElement('div');
+      if (data.type === 'block') {
+        const span = item.span||1;
+        ghost.className = 'blk';
+        ghost.style.cssText = `background:${cat.bg};color:${cat.text};height:${span*SLOT_H-3}px;width:80px;position:fixed;pointer-events:none;z-index:1000;opacity:0.88;box-shadow:0 6px 18px rgba(0,0,0,0.22);transition:none;left:-9999px;top:-9999px;`;
+        ghost.innerHTML = `<div class="bt">${item.title}</div>`;
+      } else {
+        ghost.className = 'chip';
+        ghost.style.cssText = `background:${cat.chip};color:${cat.text};position:fixed;pointer-events:none;z-index:1000;opacity:0.88;box-shadow:0 4px 14px rgba(0,0,0,0.22);transition:none;`;
+        ghost.textContent = item.title;
+      }
+      document.getElementById('root').appendChild(ghost);
+      pDrag = { ...data, ghost };
+      moveGhost(e.clientX, e.clientY);
+      document.addEventListener('pointermove', onPMove);
+      document.addEventListener('pointerup', onPUp);
+    }
+
+    function moveGhost(x, y) {
+      if (!pDrag) return;
+      pDrag.ghost.style.left = (x + 10) + 'px';
+      pDrag.ghost.style.top  = (y - 12) + 'px';
+    }
+
+    function startBlockResize(e, date, startH, b, blkEl) {
+      e.preventDefault(); e.stopPropagation();
+      let curSpan = b.span||1;
+      const onMove = me => {
+        blkEl.style.pointerEvents='none';
+        const slot = findSlotAt(me.clientX, me.clientY);
+        blkEl.style.pointerEvents='';
+        if (slot && slot.dataset.date===date) {
+          const endH = +slot.dataset.hour;
+          if (endH >= startH) {
+            const ns = Math.round((endH-startH)/0.5)+1;
+            if (ns!==curSpan && ns>=1) { curSpan=ns; blkEl.style.height=(curSpan*SLOT_H-3)+'px'; }
+          }
+        }
+      };
+      const onUp = () => {
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        if (curSpan!==(b.span||1)) { sB(date, startH, {...b, span:curSpan}); render(); }
+      };
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    }
+
+    function onPMove(e) {
+      if (!pDrag) return;
+      moveGhost(e.clientX, e.clientY);
+      document.querySelectorAll('.slot.dh').forEach(s => s.classList.remove('dh'));
+      const slot = findSlotAt(e.clientX, e.clientY);
+      if (slot && !gB(slot.dataset.date, +slot.dataset.hour)) slot.classList.add('dh');
+    }
+
+    function onPUp(e) {
+      document.removeEventListener('pointermove', onPMove);
+      document.removeEventListener('pointerup', onPUp);
+      document.querySelectorAll('.slot.dh').forEach(s => s.classList.remove('dh'));
+      if (!pDrag) return;
+      pDrag.ghost.remove();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const onTodo = el?.closest('#todo-panel');
+      const slot = findSlotAt(e.clientX, e.clientY);
+
+      if (pDrag.type === 'chip') {
+        if (slot && !gB(slot.dataset.date, +slot.dataset.hour)) {
+          const cat = pDrag.t.cat;
+          sB(slot.dataset.date, +slot.dataset.hour, {title:pDrag.t.title, cat, fixed: cat==='fixed', sub:null, span:2});
+          tq = tq.filter(x => x.id !== pDrag.t.id);
+          pDrag = null; render(); return;
+        }
+      } else if (pDrag.type === 'block') {
+        if (onTodo) {
+          dB(pDrag.date, pDrag.hour);
+          tq.push({id:'t'+Date.now(), title:pDrag.b.title, cat:pDrag.b.cat});
+          dirty();
+          pDrag = null; render(); return;
+        } else if (slot) {
+          const date = slot.dataset.date, hour = +slot.dataset.hour;
+          const isSame = date === pDrag.date && hour === pDrag.hour;
+          if (!isSame && !gB(date, hour)) {
+            sB(date, hour, pDrag.b); dB(pDrag.date, pDrag.hour);
+            pDrag = null; render(); return;
+          }
+        }
+      }
+      pDrag = null;
+    }
+
+    function rTasks() {
+      const el = document.getElementById('tlist'); el.innerHTML='';
+      if(!tq.length) { el.innerHTML='<span style="font-size:11px;color:#5aaccc;font-weight:700">할 일을 추가해보세요!</span>'; return; }
+      tq.forEach(t => {
+        const cat = C[t.cat]||C.task;
+        const ch = document.createElement('div'); ch.className='blk';
+        ch.style.cssText = `background:${cat.bg};color:${cat.text};position:relative;height:${2*SLOT_H-3}px;border-radius:5px;cursor:grab;box-shadow:0 2px 8px ${cat.bd.replace('0.5','0.18')},inset 0 1px 0 rgba(255,255,255,0.62);`;
+        ch.innerHTML = `<div class="bt">${t.title}</div>`;
+        ch.addEventListener('pointerdown', e => startChipDrag(e, t));
+        ch.addEventListener('click', ()=>oET(t));
+        el.appendChild(ch);
+      });
+    }
+
+    function co(sel) {
+      return Object.entries(C).map(([k,c])=>`<option value="${k}"${sel===k?' selected':''}>${c.label}</option>`).join('');
+    }
+
+    function sm(html) {
+      const m = document.getElementById('mod');
+      m.innerHTML = `<div class="mwrap" id="mbg"><div class="modal">${html}</div></div>`;
+      document.getElementById('mbg').addEventListener('click', e=>{ if(e.target.id==='mbg') cm(); });
+    }
+
+    function cm() { document.getElementById('mod').innerHTML=''; }
+
+    function oAB(date, hour) {
+      if(gB(date,hour)) return;
+      sm(`<div class="mtitle">+ 블록 추가</div>
+        <div style="font-size:10px;color:#5aaccc;margin-bottom:9px;font-weight:700">${date} ${hour}:00</div>
+        <input id="bt" placeholder="이름" maxlength="30"/>
+        <select id="bc">${co('study')}</select>
+        <input id="bs" placeholder="메모 (선택)" maxlength="30"/>
+        <div class="macts">
+          <button class="bcancel" onclick="cm()">취소</button>
+          <button class="bok" onclick="svB('${date}',${hour})">저장</button>
+        </div>`);
+      document.getElementById('bt').focus();
+    }
+
+    function oEB(date, hour) {
+      const b = gB(date,hour); if(!b) return;
+      sm(`<div class="mtitle">&#9998; 블록 편집</div>
+        <div style="font-size:10px;color:#5aaccc;margin-bottom:9px;font-weight:700">${date} ${hour}:00</div>
+        <input id="bt" value="${b.title}" maxlength="30"/>
+        <select id="bc">${co(b.cat)}</select>
+        <input id="bs" placeholder="메모" value="${b.sub||''}" maxlength="30"/>
+        <div class="macts">
+          <button class="bcancel" onclick="cm()">취소</button>
+          <button class="bok" onclick="svB('${date}',${hour},1)">저장</button>
+        </div>
+        <div class="delhint" onclick="dlB('${date}',${hour})">&#128465; 블록 삭제</div>`);
+    }
+
+    function svB(date, hour) {
+      const t = document.getElementById('bt').value.trim(); if(!t) return;
+      const cat = document.getElementById('bc').value;
+      sB(date, hour, {title:t, cat, sub:document.getElementById('bs').value.trim()||null, fixed: cat==='fixed', span:2});
+      cm(); render();
+    }
+
+    function dlB(date, hour) { dB(date,hour); cm(); render(); }
+
+    function openAddTask() {
+      sm(`<div class="mtitle">+ 할 일 추가</div>
+        <input id="tt" placeholder="할 일 이름" maxlength="30"/>
+        <select id="tc">${co('task')}</select>
+        <div class="macts">
+          <button class="bcancel" onclick="cm()">취소</button>
+          <button class="bok" onclick="svT()">추가</button>
+        </div>`);
+      document.getElementById('tt').focus();
+    }
+
+    function oET(t) {
+      sm(`<div class="mtitle">&#9998; 할 일 편집</div>
+        <input id="tt" value="${t.title}" maxlength="30"/>
+        <select id="tc">${co(t.cat)}</select>
+        <div class="macts">
+          <button class="bcancel" onclick="cm()">취소</button>
+          <button class="bok" onclick="svT('${t.id}')">저장</button>
+        </div>
+        <div class="delhint" onclick="dlT('${t.id}')">&#128465; 삭제</div>`);
+    }
+
+    function svT(id) {
+      const t = document.getElementById('tt').value.trim(); if(!t) return;
+      const c = document.getElementById('tc').value;
+      if(id) { const x=tq.find(q=>q.id===id); if(x){x.title=t;x.cat=c;} }
+      else { tq.push({id:'t'+Date.now(),title:t,cat:c}); }
+      dirty(); cm(); render();
+    }
+
+    function dlT(id) { tq=tq.filter(t=>t.id!==id); dirty(); cm(); render(); }
+
+    load(); render();
+  </script>
+</body>
+</html>
