@@ -210,8 +210,8 @@
     .catdel:hover { color:#ff1a1a; }
     .catmgr-empty { font-size:11px;color:#5aaccc;font-weight:700;text-align:center;padding:6px 0; }
 
-    .chipcopy { position:absolute;top:2px;right:2px;width:15px;height:15px;font-size:9px;line-height:1;border:none;background:rgba(255,255,255,0.72);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;opacity:0.85;transition:opacity 0.12s,background 0.12s;padding:0;box-shadow:0 1px 2px rgba(0,0,0,0.1); }
-    .chipcopy:hover { opacity:1;background:rgba(255,255,255,0.95); }
+    .chipcopy { position:absolute;top:2px;right:2px;width:13px;height:13px;border:none;background:rgba(255,255,255,0.28);border-radius:4px;cursor:pointer;z-index:5;transition:background 0.12s;padding:0; }
+    .chipcopy:hover { background:rgba(255,255,255,0.8); }
   </style>
 </head>
 <body>
@@ -471,7 +471,7 @@
             const span = b.span||1;
             const bl = document.createElement('div'); bl.className='blk';
             bl.style.cssText = `background:${cat.bg};color:${cat.text};height:${span*SLOT_H-3}px;box-shadow:0 2px 8px ${cat.bd.replace('0.5','0.18')},inset 0 1px 0 rgba(255,255,255,0.62);`;
-            bl.innerHTML = `<div class="bt">${b.fixed?'&#128204; ':''}${b.title}</div>${span>2&&b.sub?`<div class="bs">${b.sub}</div>`:''}<button class="chipcopy" title="할 일로 복사">&#128203;</button>`;
+            bl.innerHTML = `<div class="bt">${b.fixed?'&#128204; ':''}${b.title}</div>${span>2&&b.sub?`<div class="bs">${b.sub}</div>`:''}<button class="chipcopy" title="할 일로 복사"></button>`;
             bl.addEventListener('pointerdown', e=>startBlockDrag(e, key, h, b));
             bl.addEventListener('click', e=>{ e.stopPropagation(); oEB(key,h); });
             const handle = document.createElement('div');
@@ -602,7 +602,7 @@
         const cat = look(t.cat);
         const ch = document.createElement('div'); ch.className='blk';
         ch.style.cssText = `background:${cat.bg};color:${cat.text};position:relative;height:${2*SLOT_H-3}px;border-radius:5px;cursor:grab;box-shadow:0 2px 8px ${cat.bd.replace('0.5','0.18')},inset 0 1px 0 rgba(255,255,255,0.62);`;
-        ch.innerHTML = `<div class="bt">${t.title}</div><button class="chipcopy" title="복제">&#128203;</button>`;
+        ch.innerHTML = `<div class="bt">${t.title}</div><button class="chipcopy" title="복제"></button>`;
         ch.addEventListener('pointerdown', e => startChipDrag(e, t));
         ch.addEventListener('click', ()=>oET(t));
         const cp = ch.querySelector('.chipcopy');
