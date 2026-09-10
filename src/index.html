@@ -191,8 +191,9 @@
     .mwrap { position:fixed;inset:0;background:rgba(8,55,115,0.25);display:flex;align-items:center;justify-content:center;z-index:200; }
     .modal { background:linear-gradient(155deg,rgba(245,253,255,0.98) 0%,rgba(222,247,255,0.96) 100%);border:1.5px solid rgba(255,255,255,0.95);border-radius:14px;box-shadow:0 18px 50px rgba(18,95,175,0.2),inset 0 1px 0 rgba(255,255,255,1);padding:18px;width:260px; }
     .mtitle { font-size:14px;font-weight:800;color:#084468;margin-bottom:12px;display:flex;align-items:center;gap:5px; }
-    .modal input,.modal select { width:100%;margin-bottom:8px;font-size:12px;font-weight:600;padding:7px 10px;border:1.5px solid rgba(95,185,232,0.38);border-radius:7px;background:linear-gradient(180deg,rgba(255,255,255,0.97) 0%,rgba(232,249,255,0.92) 100%);color:#084468;outline:none;font-family:inherit; }
-    .modal input:focus,.modal select:focus { border-color:rgba(55,165,238,0.62);box-shadow:0 0 0 3px rgba(95,185,255,0.14); }
+    .modal input:not([type=checkbox]),.modal select { width:100%;margin-bottom:8px;font-size:12px;font-weight:600;padding:7px 10px;border:1.5px solid rgba(95,185,232,0.38);border-radius:7px;background:linear-gradient(180deg,rgba(255,255,255,0.97) 0%,rgba(232,249,255,0.92) 100%);color:#084468;outline:none;font-family:inherit; }
+    .modal input:not([type=checkbox]):focus,.modal select:focus { border-color:rgba(55,165,238,0.62);box-shadow:0 0 0 3px rgba(95,185,255,0.14); }
+    .modal input[type=checkbox] { width:14px;height:14px;margin:0;cursor:pointer;accent-color:#1a9eee; }
     .macts { display:flex;gap:6px;margin-top:10px; }
     .bok { flex:1;background:linear-gradient(180deg,rgba(85,192,255,0.95) 0%,rgba(35,155,240,0.9) 45%,rgba(8,125,218,0.92) 100%);color:#fff;border:1px solid rgba(4,88,178,0.32);border-radius:7px;padding:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(0,95,195,0.18),inset 0 1px 0 rgba(255,255,255,0.38);text-shadow:0 1px 1px rgba(0,58,135,0.32); }
     .bok:hover { background:linear-gradient(180deg,rgba(115,210,255,0.95) 0%,rgba(55,175,248,0.9) 45%,rgba(18,145,232,0.92) 100%); }
@@ -200,6 +201,17 @@
     .delhint { font-size:10px;color:#5aaccc;text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(130,205,240,0.28);cursor:pointer;font-weight:700;transition:color 0.15s; }
     .delhint:hover { color:#cc1a1a; }
     .chklabel { font-size:11px;font-weight:700;color:#1a6888;display:flex;align-items:center;gap:5px;margin-top:2px; }
+
+    .modal input[type=color] { width:30px;height:30px;padding:2px;border:1.5px solid rgba(95,185,232,0.38);border-radius:6px;cursor:pointer;flex-shrink:0;background:none;margin-bottom:0; }
+    .catmgr-row { display:flex;align-items:center;gap:6px;margin-bottom:7px; }
+    .catmgr-row input[type=text] { flex:1;margin-bottom:0; }
+    .catdel { background:none;border:none;cursor:pointer;font-size:14px;color:#cc3333;padding:2px 6px;flex-shrink:0;font-family:inherit; }
+    .catdel:hover { color:#ff1a1a; }
+    .catmgr-empty { font-size:11px;color:#5aaccc;font-weight:700;text-align:center;padding:6px 0; }
+
+    .chipcopy { position:absolute;top:2px;right:2px;width:15px;height:15px;font-size:9px;line-height:1;border:none;background:rgba(255,255,255,0.65);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;opacity:0;transition:opacity 0.12s,background 0.12s;padding:0; }
+    .tasklist .blk:hover .chipcopy { opacity:1; }
+    .chipcopy:hover { background:rgba(255,255,255,0.95); }
   </style>
 </head>
 <body>
@@ -302,16 +314,30 @@
     const DAYS = ['월','화','수','목','금','토','일'];
     const HRS = Array.from({length:16},(_,i)=>i+8);
 
-    const C = {
-      fixed:{ label:'고정', bg:'rgba(30,195,145,0.32)',  chip:'rgba(30,195,145,0.72)',  text:'#004535', bd:'rgba(20,200,150,0.55)' },
-      study:{ label:'공부', bg:'rgba(105,100,230,0.28)', chip:'rgba(105,100,230,0.68)', text:'#1a1858', bd:'rgba(110,105,235,0.5)' },
-      work: { label:'업무', bg:'rgba(35,148,242,0.28)',  chip:'rgba(35,148,242,0.68)',  text:'#002855', bd:'rgba(38,152,245,0.5)' },
-      break:{ label:'휴식', bg:'rgba(240,128,52,0.28)',  chip:'rgba(240,128,52,0.68)',  text:'#4a1800', bd:'rgba(240,132,55,0.5)' },
-      task: { label:'할일', bg:'rgba(88,192,35,0.28)',   chip:'rgba(88,192,35,0.68)',   text:'#1a3800', bd:'rgba(90,195,38,0.5)' },
+    const DEFAULT_CATS = {
+      study:{ label:'공부', color:'#6964e6' },
+      work: { label:'업무', color:'#2394f2' },
+      break:{ label:'휴식', color:'#f08034' },
+      task: { label:'할일', color:'#58c023' },
     };
 
+    function hexToRgb(hex) {
+      hex = (hex||'#888888').replace('#','');
+      if (hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+      const num = parseInt(hex,16)||0x888888;
+      return [(num>>16)&255, (num>>8)&255, num&255];
+    }
+    function crgba(hex,a) { const [r,g,b]=hexToRgb(hex); return `rgba(${r},${g},${b},${a})`; }
+    function ctext(hex) { const [r,g,b]=hexToRgb(hex); return `rgb(${Math.round(r*0.22)},${Math.round(g*0.22)},${Math.round(b*0.22)})`; }
+
+    function look(key) {
+      const c = CATS[key];
+      if (!c) return { label:'미분류', bg:'rgba(150,150,150,0.28)', chip:'rgba(150,150,150,0.68)', text:'#333', bd:'rgba(150,150,150,0.5)' };
+      return { label:c.label, bg:crgba(c.color,0.28), chip:crgba(c.color,0.68), text:ctext(c.color), bd:crgba(c.color,0.5) };
+    }
+
     const SK = 'tb_glass_v1';
-    let wo=0, blocks={}, tq=[], drag=null, dtype=null, af='all', st=null;
+    let wo=0, blocks={}, tq=[], CATS={}, drag=null, dtype=null, af='all', st=null;
 
     function getDow(dateStr) {
       const day = new Date(dateStr + 'T00:00:00').getDay();
@@ -321,13 +347,13 @@
     function load() {
       try {
         const r = localStorage.getItem(SK);
-        if (r) { const d=JSON.parse(r); blocks=d.blocks||{}; tq=d.tq||[]; }
-        else { blocks={}; tq=[]; }
-      } catch(e) { blocks={}; tq=[]; }
+        if (r) { const d=JSON.parse(r); blocks=d.blocks||{}; tq=d.tq||[]; CATS=d.cats||JSON.parse(JSON.stringify(DEFAULT_CATS)); }
+        else { blocks={}; tq=[]; CATS=JSON.parse(JSON.stringify(DEFAULT_CATS)); }
+      } catch(e) { blocks={}; tq=[]; CATS=JSON.parse(JSON.stringify(DEFAULT_CATS)); }
     }
 
     function save() {
-      try { localStorage.setItem(SK, JSON.stringify({blocks,tq})); ss('ok'); }
+      try { localStorage.setItem(SK, JSON.stringify({blocks,tq,cats:CATS})); ss('ok'); }
       catch(e) { ss('err'); }
     }
 
@@ -398,12 +424,18 @@
       ap.className = 'cpill'+(af==='all'?' on':'');
       ap.style.cssText = 'background:linear-gradient(135deg,rgba(195,240,255,0.88),rgba(155,225,250,0.82));color:#065a80;border-color:rgba(110,195,238,0.48);';
       ap.textContent = '전체'; ap.onclick = ()=>{ af='all'; render(); }; el.appendChild(ap);
-      Object.entries(C).forEach(([k,c]) => {
+      Object.keys(CATS).forEach(k => {
+        const c = look(k);
         const b = document.createElement('button');
         b.className = 'cpill'+(af===k?' on':'');
         b.style.cssText = `background:${c.chip};color:${c.text};border-color:${c.bd};`;
         b.textContent = c.label; b.onclick = ()=>{ af=af===k?'all':k; render(); }; el.appendChild(b);
       });
+      const mgr = document.createElement('button');
+      mgr.className = 'nbtn'; mgr.style.cssText = 'width:22px;height:22px;font-size:12px;';
+      mgr.title = '카테고리 관리'; mgr.innerHTML = '&#9881;';
+      mgr.onclick = openCatManager;
+      el.appendChild(mgr);
     }
 
     function rGrid(ds, td) {
@@ -435,11 +467,11 @@
           sl.dataset.date=key; sl.dataset.hour=h;
           const b = gBStart(key,h);
           if(b && (af==='all'||af===b.cat)) {
-            const cat = C[b.cat]||C.task;
+            const cat = look(b.cat);
             const span = b.span||1;
             const bl = document.createElement('div'); bl.className='blk';
             bl.style.cssText = `background:${cat.bg};color:${cat.text};height:${span*SLOT_H-3}px;box-shadow:0 2px 8px ${cat.bd.replace('0.5','0.18')},inset 0 1px 0 rgba(255,255,255,0.62);`;
-            bl.innerHTML = `<div class="bt">${b.title}</div>${span>2&&b.sub?`<div class="bs">${b.sub}</div>`:''}`;
+            bl.innerHTML = `<div class="bt">${b.fixed?'&#128204; ':''}${b.title}</div>${span>2&&b.sub?`<div class="bs">${b.sub}</div>`:''}`;
             bl.addEventListener('pointerdown', e=>startBlockDrag(e, key, h, b));
             bl.addEventListener('click', e=>{ e.stopPropagation(); oEB(key,h); });
             const handle = document.createElement('div');
@@ -468,7 +500,7 @@
 
     function startPDrag(e, data) {
       const item = data.type === 'chip' ? data.t : data.b;
-      const cat = C[item.cat]||C.task;
+      const cat = look(item.cat);
       const ghost = document.createElement('div');
       if (data.type === 'block') {
         const span = item.span||1;
@@ -538,7 +570,7 @@
       if (pDrag.type === 'chip') {
         if (slot && !gB(slot.dataset.date, +slot.dataset.hour)) {
           const cat = pDrag.t.cat;
-          sB(slot.dataset.date, +slot.dataset.hour, {title:pDrag.t.title, cat, fixed: cat==='fixed', sub:null, span:2});
+          sB(slot.dataset.date, +slot.dataset.hour, {title:pDrag.t.title, cat, fixed:false, sub:null, span:2});
           tq = tq.filter(x => x.id !== pDrag.t.id);
           pDrag = null; render(); return;
         }
@@ -564,24 +596,61 @@
       const el = document.getElementById('tlist'); el.innerHTML='';
       if(!tq.length) { el.innerHTML='<span style="font-size:11px;color:#5aaccc;font-weight:700">할 일을 추가해보세요!</span>'; return; }
       tq.forEach(t => {
-        const cat = C[t.cat]||C.task;
+        const cat = look(t.cat);
         const ch = document.createElement('div'); ch.className='blk';
         ch.style.cssText = `background:${cat.bg};color:${cat.text};position:relative;height:${2*SLOT_H-3}px;border-radius:5px;cursor:grab;box-shadow:0 2px 8px ${cat.bd.replace('0.5','0.18')},inset 0 1px 0 rgba(255,255,255,0.62);`;
-        ch.innerHTML = `<div class="bt">${t.title}</div>`;
+        ch.innerHTML = `<div class="bt">${t.title}</div><button class="chipcopy" title="복제">&#128203;</button>`;
         ch.addEventListener('pointerdown', e => startChipDrag(e, t));
         ch.addEventListener('click', ()=>oET(t));
+        const cp = ch.querySelector('.chipcopy');
+        cp.addEventListener('pointerdown', e => e.stopPropagation());
+        cp.addEventListener('click', e => dupTask(t, e));
         el.appendChild(ch);
       });
     }
 
-    function co(sel) {
-      return Object.entries(C).map(([k,c])=>`<option value="${k}"${sel===k?' selected':''}>${c.label}</option>`).join('');
+    function dupTask(t, e) {
+      e.stopPropagation();
+      tq.push({ id:'t'+Date.now()+Math.random().toString(36).slice(2,6), title:t.title, cat:t.cat });
+      dirty(); render();
     }
 
-    function sm(html) {
+    function co(sel) {
+      return Object.entries(CATS).map(([k,c])=>`<option value="${k}"${sel===k?' selected':''}>${c.label}</option>`).join('');
+    }
+
+    function sm(html, wide) {
       const m = document.getElementById('mod');
-      m.innerHTML = `<div class="mwrap" id="mbg"><div class="modal">${html}</div></div>`;
+      m.innerHTML = `<div class="mwrap" id="mbg"><div class="modal"${wide?' style="width:280px"':''}>${html}</div></div>`;
       document.getElementById('mbg').addEventListener('click', e=>{ if(e.target.id==='mbg') cm(); });
+    }
+
+    function openCatManager() {
+      const rows = Object.entries(CATS).map(([id,c]) => `
+        <div class="catmgr-row">
+          <input type="color" value="${c.color}" onchange="updCatColor('${id}',this.value)"/>
+          <input type="text" value="${c.label}" maxlength="8" onchange="updCatLabel('${id}',this.value)"/>
+          <button class="catdel" onclick="delCat('${id}')" title="삭제">&#128465;</button>
+        </div>`).join('') || `<div class="catmgr-empty">카테고리가 없습니다</div>`;
+      sm(`<div class="mtitle">&#127912; 카테고리 관리</div>
+        <div id="catrows">${rows}</div>
+        <button class="abtn" style="width:100%;margin-top:2px;" onclick="addCat()">+ 카테고리 추가</button>
+        <div class="macts"><button class="bcancel" onclick="cm()">닫기</button></div>`, true);
+    }
+
+    function updCatColor(id, val) { if(!CATS[id]) return; CATS[id].color = val; dirty(); render(); }
+    function updCatLabel(id, val) { if(!CATS[id]) return; CATS[id].label = val.trim() || CATS[id].label; dirty(); render(); }
+
+    function addCat() {
+      const id = 'c' + Date.now();
+      CATS[id] = { label:'새 카테고리', color:'#4aa8d8' };
+      dirty(); render(); openCatManager();
+    }
+
+    function delCat(id) {
+      if (Object.keys(CATS).length <= 1) return;
+      delete CATS[id];
+      dirty(); render(); openCatManager();
     }
 
     function cm() { document.getElementById('mod').innerHTML=''; }
@@ -593,6 +662,7 @@
         <input id="bt" placeholder="이름" maxlength="30"/>
         <select id="bc">${co('study')}</select>
         <input id="bs" placeholder="메모 (선택)" maxlength="30"/>
+        <label class="chklabel"><input type="checkbox" id="bf"/> &#128204; 매주 반복 (고정)</label>
         <div class="macts">
           <button class="bcancel" onclick="cm()">취소</button>
           <button class="bok" onclick="svB('${date}',${hour})">저장</button>
@@ -607,6 +677,7 @@
         <input id="bt" value="${b.title}" maxlength="30"/>
         <select id="bc">${co(b.cat)}</select>
         <input id="bs" placeholder="메모" value="${b.sub||''}" maxlength="30"/>
+        <label class="chklabel"><input type="checkbox" id="bf" ${b.fixed?'checked':''}/> &#128204; 매주 반복 (고정)</label>
         <div class="macts">
           <button class="bcancel" onclick="cm()">취소</button>
           <button class="bok" onclick="svB('${date}',${hour},1)">저장</button>
@@ -617,7 +688,9 @@
     function svB(date, hour) {
       const t = document.getElementById('bt').value.trim(); if(!t) return;
       const cat = document.getElementById('bc').value;
-      sB(date, hour, {title:t, cat, sub:document.getElementById('bs').value.trim()||null, fixed: cat==='fixed', span:2});
+      const fixed = document.getElementById('bf').checked;
+      const prev = gB(date, hour);
+      sB(date, hour, {title:t, cat, sub:document.getElementById('bs').value.trim()||null, fixed, span:(prev&&prev.span)||2});
       cm(); render();
     }
 
