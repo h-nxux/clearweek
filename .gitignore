@@ -4,3 +4,6 @@ src-tauri/icons/
 
 # macOS
 .DS_Store
+
+# personal icon source, not for distribution
+icon.png
