@@ -145,7 +145,7 @@
     }
     .blk-handle:hover { background:rgba(255,255,255,0.35); }
 
-    .bt { font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:relative;z-index:1; }
+    .bt { font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:relative;z-index:1;padding-right:14px; }
     .bs { font-size:8px;opacity:0.78;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:relative;z-index:1; }
 
     .abtn { background:linear-gradient(180deg,rgba(115,222,168,0.95) 0%,rgba(45,192,108,0.9) 45%,rgba(18,168,82,0.92) 100%);color:#fff;border:1px solid rgba(8,118,48,0.28);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(0,118,48,0.16),inset 0 1px 0 rgba(255,255,255,0.42);text-shadow:0 1px 1px rgba(0,78,28,0.32);transition:all 0.1s; }
@@ -278,7 +278,7 @@
     };
 
     const PANEL_W = 200;
-    let todoOpen = false;
+    let todoOpen = true;
     let baseW = null, baseH = null, baseX = null, baseY = null;
 
     async function toggleTodo() {
@@ -471,13 +471,16 @@
             const span = b.span||1;
             const bl = document.createElement('div'); bl.className='blk';
             bl.style.cssText = `background:${cat.bg};color:${cat.text};height:${span*SLOT_H-3}px;box-shadow:0 2px 8px ${cat.bd.replace('0.5','0.18')},inset 0 1px 0 rgba(255,255,255,0.62);`;
-            bl.innerHTML = `<div class="bt">${b.fixed?'&#128204; ':''}${b.title}</div>${span>2&&b.sub?`<div class="bs">${b.sub}</div>`:''}`;
+            bl.innerHTML = `<div class="bt">${b.fixed?'&#128204; ':''}${b.title}</div>${span>2&&b.sub?`<div class="bs">${b.sub}</div>`:''}<button class="chipcopy" title="할 일로 복사">&#128203;</button>`;
             bl.addEventListener('pointerdown', e=>startBlockDrag(e, key, h, b));
             bl.addEventListener('click', e=>{ e.stopPropagation(); oEB(key,h); });
             const handle = document.createElement('div');
             handle.className='blk-handle';
             handle.addEventListener('pointerdown', e=>startBlockResize(e, key, h, b, bl));
             bl.appendChild(handle);
+            const cp = bl.querySelector('.chipcopy');
+            cp.addEventListener('pointerdown', e=>e.stopPropagation());
+            cp.addEventListener('click', e=>dupBlock(b, e));
             sl.appendChild(bl);
           }
           if(!gB(key,h)) sl.addEventListener('click', ()=>oAB(key,h));
@@ -612,6 +615,12 @@
     function dupTask(t, e) {
       e.stopPropagation();
       tq.push({ id:'t'+Date.now()+Math.random().toString(36).slice(2,6), title:t.title, cat:t.cat });
+      dirty(); render();
+    }
+
+    function dupBlock(b, e) {
+      e.stopPropagation();
+      tq.push({ id:'t'+Date.now()+Math.random().toString(36).slice(2,6), title:b.title, cat:b.cat });
       dirty(); render();
     }
 
